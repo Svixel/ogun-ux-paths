@@ -1,0 +1,4 @@
+# local, private project configs and real-output fixtures
+projects/*.json
+!projects/example.json
+tests/fixtures/
