@@ -1,5 +1,7 @@
 # ux-paths
 
+![Ogun, Yoruba orisha of iron and the open road, in a terracotta relief tablet](docs/banner.jpg)
+
 **Ogun clears the road.** A skill for AI coding agents that finds what is hard in a product, cuts it away, and builds the clearer version.
 
 Most UX reviews look at screens. `ux-paths` looks at **paths**: the jobs a person is trying to finish, like "find my next step" or "hand in my work". Every file, finding and decision is tied to a path, so you can measure whether a redesign made the journey shorter and clearer.
@@ -61,6 +63,8 @@ Your project configs in `projects/` and any real-output fixtures are git-ignored
 - Companion skills: [`maat-autoreview-ui`](https://github.com/Svixel/maat-autoreview-ui) reviews how a UI renders, and its screenshot driver powers `capture` here. [`autoreview`](https://github.com/openclaw/agent-skills/tree/main/skills/autoreview) from [openclaw/agent-skills](https://github.com/openclaw/agent-skills) (MIT) reviews code.
 - The twenty laws are well-known UX principles; [lawsofux.com](https://lawsofux.com) is a good overview of most of them.
 - The method was distilled from a real four-step product audit and reduced to this reusable form.
+
+Banner image generated with Grok Imagine 2.0 (xAI) via fal.ai: Ogun in the style of an Ife terracotta plaque.
 
 ## Status and licence
 
