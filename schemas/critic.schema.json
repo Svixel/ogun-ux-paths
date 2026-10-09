@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ux-paths.local/schemas/critic.schema.json",
+  "description": "The per-lane UX critic's verdict after the build loop: a screen-by-screen judgement, a ranked list of blockers that must be fixed, and a separate ranked list of polish items that must not.",
+  "type": "object",
+  "properties": {
+    "screens": {
+      "type": "array",
+      "description": "One entry per screen and viewport looked at.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "route": { "type": "string", "description": "The route or job screen judged." },
+          "viewport": { "type": "string", "description": "The viewport name or width the screenshot was taken at." },
+          "verdict": {
+            "type": "string",
+            "enum": ["OK", "FIX"],
+            "description": "OK if a first-time user would succeed here without confusion; FIX otherwise."
+          },
+          "what": { "type": "string", "description": "What was seen and why it earned this verdict." },
+          "fix": { "type": "string", "description": "The concrete fix, or an empty string when verdict is OK." }
+        },
+        "required": ["route", "viewport", "verdict", "what", "fix"],
+        "additionalProperties": false
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "description": "Ranked, most-severe first. Would confuse a first-time user or break the target path; the blocker fixer must address every one.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "A short stable identifier for this blocker." },
+          "route": { "type": "string", "description": "The route it affects." },
+          "what": { "type": "string", "description": "What is wrong." },
+          "fix": { "type": "string", "description": "The concrete fix." },
+          "file": { "type": "string", "description": "The file the fix belongs in." }
+        },
+        "required": ["id", "route", "what", "fix", "file"],
+        "additionalProperties": false
+      }
+    },
+    "polish": {
+      "type": "array",
+      "description": "Nice-to-have improvements that are not blockers and must stay untouched by the blocker fixer.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "route": { "type": "string", "description": "The route it affects." },
+          "what": { "type": "string", "description": "The suggested improvement." }
+        },
+        "required": ["route", "what"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["screens", "blockers", "polish"],
+  "additionalProperties": false
+}

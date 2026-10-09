@@ -1,0 +1,249 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "project.schema.json",
+  "title": "ux-paths project configuration",
+  "description": "One file per product under projects/<name>.json. Validated by scripts/lib/config.mjs (a hand-rolled subset: type, required, properties, additionalProperties, enum, items, minItems, pattern, const, oneOf). Cross-field rules that the subset cannot express are checked in loadProject and named in projects/README.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["configVersion", "name", "root", "auditDir", "product", "lanes", "engines", "models", "commands", "loop", "rules"],
+  "properties": {
+    "configVersion": {
+      "description": "Bumped when a key changes meaning.",
+      "type": "integer",
+      "enum": [1]
+    },
+    "name": {
+      "description": "File name without .json. Lower case, digits, hyphens.",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "root": {
+      "description": "Absolute path to the product checkout.",
+      "type": "string",
+      "pattern": "^/"
+    },
+    "auditDir": {
+      "description": "Repo-relative directory. Everything the skill writes goes here.",
+      "type": "string",
+      "pattern": "^[^/][^\\n]*[^/]$"
+    },
+    "product": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "paragraph", "language"],
+      "properties": {
+        "name": { "type": "string" },
+        "paragraph": {
+          "description": "One paragraph: what it is, who uses it, the login model, the language, the cadence. Fills {{product.paragraph}}.",
+          "type": "string"
+        },
+        "language": {
+          "description": "Language of the UI copy. Auditors quote copy as shown.",
+          "type": "string"
+        },
+        "copyGlobs": { "type": "array", "items": { "type": "string" } },
+        "clientDocs": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "lanes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label", "asBuiltPrefix", "targetPrefix", "actors"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "label": { "type": "string" },
+          "asBuiltPrefix": { "type": "string", "pattern": "^[A-Z][A-Z0-9]{0,2}$" },
+          "targetPrefix": { "type": "string", "pattern": "^[A-Z][A-Z0-9]{0,2}$" },
+          "actors": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+        }
+      }
+    },
+    "inputs": {
+      "description": "Input documents, relative to auditDir. Prompts list the ones that exist.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "screens": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["baseUrl", "viewports", "auth", "identities"],
+      "properties": {
+        "baseUrl": { "type": "string", "pattern": "^https?://" },
+        "viewports": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "width", "height"],
+            "properties": {
+              "name": { "type": "string" },
+              "width": { "type": "integer" },
+              "height": { "type": "integer" }
+            }
+          }
+        },
+        "auth": {
+          "description": "Passed through to the capture driver unchanged. mode none needs nothing else; mode devLogin needs endpoint and one of secretFile or secretEnv.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode"],
+          "properties": {
+            "mode": { "type": "string", "enum": ["none", "devLogin"] },
+            "endpoint": { "type": "string" },
+            "header": { "type": "string" },
+            "secretFile": { "type": "string" },
+            "secretEnv": { "type": "string" },
+            "handleField": { "type": "string" }
+          }
+        },
+        "capture": {
+          "description": "Playwright waits passed to the capture driver. Absent keys take the driver's defaults (30000 and 15000). A dev server that compiles a route on first request (Next.js dev) needs more. Each value is a positive integer of milliseconds no greater than 2147483647.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "navigationTimeoutMs": { "type": "integer" },
+            "waitForTimeoutMs": { "type": "integer" }
+          }
+        },
+        "identities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "role"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+              "role": {
+                "description": "Handle posted to the devLogin endpoint, or null for a logged-out identity.",
+                "type": ["string", "null"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "engines": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cheap"],
+      "properties": {
+        "cheap": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["engine", "model"],
+          "properties": {
+            "engine": { "type": "string", "enum": ["codex", "claude"] },
+            "model": { "type": "string" },
+            "effort": { "type": ["string", "null"] },
+            "maxTurns": { "description": "Accepted so old configs load. Ignored: codex and claude take no turn cap.", "type": ["integer", "null"] },
+            "concurrency": { "type": "integer" },
+            "wrapper": {
+              "description": "null, or ori to route the harness through OpenRouter. ori wraps codex and claude only.",
+              "type": ["string", "null"],
+              "enum": ["ori", null]
+            },
+            "timeoutMs": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "models": {
+      "description": "Model per loop role. inherit means the workflow keeps the calling model.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["foundation", "builder", "checker", "fixer", "critic", "blockerFixer", "finalChecker"],
+      "properties": {
+        "foundation": { "type": "string" },
+        "builder": { "type": "string" },
+        "checker": { "type": "string" },
+        "fixer": { "type": "string" },
+        "critic": { "type": "string" },
+        "blockerFixer": { "type": "string" },
+        "finalChecker": { "type": "string" }
+      }
+    },
+    "commands": {
+      "description": "The only commands the loop may run. e2e substitutes {spec} and, optionally, {port}.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lint", "types", "extra", "full", "e2e"],
+      "properties": {
+        "lint": { "type": "string" },
+        "types": { "type": "string" },
+        "extra": { "type": "array", "items": { "type": "string" } },
+        "full": { "type": "string" },
+        "e2e": { "type": "string" },
+        "usage": {
+          "description": "Optional shell command that prints CSV action,entity,created_at.",
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "loop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxRounds", "playwrightSlots", "mode"],
+      "properties": {
+        "maxRounds": { "type": "integer" },
+        "playwrightSlots": { "type": "integer" },
+        "mode": { "type": "string", "enum": ["prototype", "real"] },
+        "portBase": {
+          "description": "Base port for the Playwright slots used by commands.e2e's {port} marker. Each slot's port is portBase + slot. Default 3200.",
+          "type": ["integer", "null"]
+        },
+        "specTemplate": {
+          "description": "Used when the build contract's ownership table has no Spec column. {id}, {lane} and {slug} are substituted.",
+          "type": ["string", "null"]
+        },
+        "ownsBase": {
+          "description": "Prefix prepended to every owns / link-only glob in the build contract that does not already start with it.",
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "rules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "cutMarker"],
+      "properties": {
+        "file": {
+          "description": "Redesign rules file, relative to auditDir. Rule ids are the '## R<n>.' headings before cutMarker.",
+          "type": "string"
+        },
+        "cutMarker": { "type": "string" }
+      }
+    },
+    "build": {
+      "description": "Step 3 inputs that are not derived from the build contract.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "designSkill": {
+          "description": "Absolute path or skill:<relative> path to the design-taste skill the builders read.",
+          "type": ["string", "null"]
+        },
+        "houseDocs": {
+          "description": "Repo-relative documents that state the house UI rules.",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "foundation": {
+          "description": "Fallback foundation job when the build contract has no Foundation block.",
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["id", "brief", "owns", "spec"],
+          "properties": {
+            "id": { "type": "string" },
+            "brief": { "type": "string" },
+            "owns": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+            "spec": { "type": ["string", "null"] }
+          }
+        }
+      }
+    }
+  }
+}

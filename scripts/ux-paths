@@ -1,0 +1,102 @@
+#!/usr/bin/env node
+/**
+ * ux-paths — the UX programme runner.
+ *
+ * Four steps, one unit of work: a path, meaning a job a person finishes. This
+ * entry point is dispatch and nothing else. Each subcommand is a module under
+ * lib/commands/ that exports `main(argv, ctx)` and returns an exit code.
+ *
+ *   ctx = { skillDir, loadProject(nameOrPath, options), log(line) }
+ *
+ * Exit codes: 0 ok, 1 the command asserted something and it failed (rulecheck
+ * FAIL rows, an unmapped finding), 2 usage, a missing precondition, or the git
+ * guard tripping.
+ */
+
+import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { UsageError, loadProject } from "./lib/config.mjs";
+
+const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
+const SKILL_DIR = dirname(SCRIPT_DIR);
+
+const COMMANDS = [
+  ["init", "scaffold <auditDir>: tracker, inputs/, paths.json, the rendered method files"],
+  ["capture", "screenshot every route in paths.json, per identity and viewport"],
+  ["audit", "step 1: cheap engine writes one path file per path"],
+  ["verify", "step 1: re-read each path file with fresh context, append section 9"],
+  ["rulecheck", "step 2: check each target path file against the redesign rules"],
+  ["synthesize", "step 1: build FINDINGS.md and METRICS.md from the path files"],
+  ["synthesize-target", "step 2: build target/METRICS.md and the generated part of DECISIONS.md"],
+  ["usage", "run commands.usage and write inputs/usage.md"],
+  ["status", "counts on disk for every step"],
+  ["loop-args", "step 3: print the Workflow args JSON for the build loop"],
+];
+
+function help() {
+  const width = Math.max(...COMMANDS.map(([name]) => name.length));
+  return `ux-paths — audit, simplify and rebuild a product one user path at a time.
+
+Usage: ux-paths <command> [options]
+
+Commands:
+${COMMANDS.map(([name, blurb]) => `  ${name.padEnd(width + 2)}${blurb}`).join("\n")}
+
+Common options:
+  --project <name>   read projects/<name>.json (or --config <path>)
+  --root <dir>       override the config's root checkout
+  --help             this text, or the command's own usage
+
+Run \`ux-paths <command> --help\` for a command's options.
+Config keys: ${join(SKILL_DIR, "projects", "README.md")}
+`;
+}
+
+async function run(argv) {
+  const [name, ...rest] = argv;
+  if (!name || name === "--help" || name === "-h" || name === "help") {
+    process.stdout.write(`${help()}\n`);
+    return name ? 0 : 2;
+  }
+  if (name === "--version" || name === "-v") {
+    process.stdout.write("ux-paths 1\n");
+    return 0;
+  }
+  if (!COMMANDS.some(([command]) => command === name)) {
+    process.stderr.write(`ux-paths: unknown command "${name}".\n\n${help()}\n`);
+    return 2;
+  }
+  const module = join(SCRIPT_DIR, "lib", "commands", `${name}.mjs`);
+  if (!existsSync(module)) {
+    process.stderr.write(
+      `ux-paths: the "${name}" command is not installed: ${module} does not exist.\n` +
+        "This skill is incomplete. Reinstall it, or run a command whose module is present.\n",
+    );
+    return 2;
+  }
+  const loaded = await import(module);
+  if (typeof loaded.main !== "function") {
+    process.stderr.write(`ux-paths: ${module} does not export main(argv, ctx).\n`);
+    return 2;
+  }
+  const ctx = {
+    skillDir: SKILL_DIR,
+    loadProject,
+    log: (line) => process.stdout.write(`${line}\n`),
+  };
+  const code = await loaded.main(rest, ctx);
+  return typeof code === "number" ? code : 0;
+}
+
+try {
+  process.exitCode = await run(process.argv.slice(2));
+} catch (error) {
+  if (error instanceof UsageError || typeof error?.exitCode === "number") {
+    process.stderr.write(`ux-paths: ${error.message}\n`);
+    process.exitCode = error.exitCode ?? 2;
+  } else {
+    process.stderr.write(`ux-paths: ${error?.stack || error}\n`);
+    process.exitCode = 1;
+  }
+}

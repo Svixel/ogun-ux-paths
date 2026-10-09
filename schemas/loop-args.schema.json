@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "loop-args.schema.json",
+  "title": "ux-paths build-loop workflow arguments",
+  "description": "Printed by `ux-paths loop-args` and passed to the Workflow tool. A workflow script has no filesystem access, so every path is resolved and every prompt is rendered here. Placeholders whose root is a runtime value (job, round, build, check, critic, blockers, lane, screens, previous) are left in the prompt text for the script to fill.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["root", "auditDir", "contract", "log", "mode", "maxRounds", "playwrightSlots", "models", "commands", "skillDir", "designSkill", "houseDocs", "lanes", "foundation", "jobs", "prompts"],
+  "properties": {
+    "root": { "type": "string", "pattern": "^/" },
+    "auditDir": { "type": "string" },
+    "contract": {
+      "description": "Repo-relative path to the build contract.",
+      "type": "string"
+    },
+    "log": {
+      "description": "Repo-relative path to BUILD-LOG.md.",
+      "type": "string"
+    },
+    "mode": { "type": "string", "enum": ["prototype", "real"] },
+    "maxRounds": { "type": "integer" },
+    "playwrightSlots": { "type": "integer" },
+    "portBase": {
+      "description": "Base port for the Playwright slots. Each slot's port is portBase + slot. Defaults to 3200 when the project config omits loop.portBase.",
+      "type": "integer"
+    },
+    "models": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["foundation", "builder", "checker", "fixer", "critic", "blockerFixer", "finalChecker"],
+      "properties": {
+        "foundation": { "type": "string" },
+        "builder": { "type": "string" },
+        "checker": { "type": "string" },
+        "fixer": { "type": "string" },
+        "critic": { "type": "string" },
+        "blockerFixer": { "type": "string" },
+        "finalChecker": { "type": "string" }
+      }
+    },
+    "commands": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lint", "types", "extra", "full", "e2e"],
+      "properties": {
+        "lint": { "type": "string" },
+        "types": { "type": "string" },
+        "extra": { "type": "array", "items": { "type": "string" } },
+        "full": { "type": "string" },
+        "e2e": { "type": "string" },
+        "usage": { "type": ["string", "null"] }
+      }
+    },
+    "skillDir": { "type": "string", "pattern": "^/" },
+    "designSkill": { "type": ["string", "null"] },
+    "houseDocs": { "type": "array", "items": { "type": "string" } },
+    "lanes": {
+      "description": "The lanes the selected jobs belong to, in config order. One critic and one blocker fixer per lane.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label"],
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" }
+        }
+      }
+    },
+    "foundation": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["id", "brief", "owns", "spec"],
+      "properties": {
+        "id": { "type": "string" },
+        "brief": { "type": "string" },
+        "owns": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "spec": { "type": ["string", "null"] }
+      }
+    },
+    "jobs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "file", "lane", "owns", "linkOnly", "spec", "model"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "file": {
+            "description": "Target path file, relative to auditDir.",
+            "type": "string"
+          },
+          "lane": { "type": "string" },
+          "owns": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+          "linkOnly": { "type": "array", "items": { "type": "string" } },
+          "spec": { "type": ["string", "null"] },
+          "model": {
+            "description": "null means use models.builder.",
+            "type": ["string", "null"]
+          }
+        }
+      }
+    },
+    "prompts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["foundation", "builder", "checker", "fixer", "critic", "blockerFixer", "finalChecker"],
+      "properties": {
+        "foundation": { "type": "string" },
+        "builder": { "type": "string" },
+        "checker": { "type": "string" },
+        "fixer": { "type": "string" },
+        "critic": { "type": "string" },
+        "blockerFixer": { "type": "string" },
+        "finalChecker": { "type": "string" }
+      }
+    }
+  }
+}

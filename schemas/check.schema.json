@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ux-paths.local/schemas/check.schema.json",
+  "description": "Verdict returned by a build-loop checker: whether the round passes, the concrete fails with fixes when it does not, which check commands were run and their pass/fail outcome, and free-text notes.",
+  "type": "object",
+  "properties": {
+    "pass": {
+      "type": "boolean",
+      "description": "True only if every check ran and every fail-worthy rule held."
+    },
+    "fails": {
+      "type": "array",
+      "description": "Concrete, evidenced failures; empty when pass is true.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rule": {
+            "type": "string",
+            "description": "The rule or requirement that was violated."
+          },
+          "evidence": {
+            "type": "string",
+            "description": "A file and line, a route, or a command output proving the violation."
+          },
+          "fix": {
+            "type": "string",
+            "description": "The concrete change that would resolve this fail."
+          }
+        },
+        "required": ["rule", "evidence", "fix"],
+        "additionalProperties": false
+      }
+    },
+    "checks": {
+      "type": "object",
+      "description": "Which project commands ran this round and whether each passed.",
+      "properties": {
+        "lint": { "type": "boolean", "description": "Result of commands.lint." },
+        "types": { "type": "boolean", "description": "Result of commands.types." },
+        "extra": { "type": "boolean", "description": "Result of commands.extra (all entries must pass)." },
+        "full": { "type": "boolean", "description": "Result of commands.full." },
+        "e2e": { "type": "boolean", "description": "Result of the job's commands.e2e spec." },
+        "paths": { "type": "boolean", "description": "True if git status --porcelain shows no change outside the job's owned/allowed paths." }
+      },
+      "required": ["lint", "types", "extra", "full", "e2e", "paths"],
+      "additionalProperties": false
+    },
+    "notes": {
+      "type": "string",
+      "description": "Free-text summary a human or the next round can read at a glance."
+    }
+  },
+  "required": ["pass", "fails", "checks", "notes"],
+  "additionalProperties": false
+}

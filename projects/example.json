@@ -1,0 +1,93 @@
+{
+  "configVersion": 1,
+  "name": "example",
+  "root": "/abs/path/to/exempelportal",
+  "auditDir": "docs/ux/2026-09",
+  "product": {
+    "name": "Exempelportal",
+    "paragraph": "Exempelportal is a small public service portal. Anyone can read the public pages without an account. A person with a case creates an account, signs in with a one-time code sent by email, and follows the case from there. The interface is Swedish. Releases go out about once a fortnight, so a change lands in front of real people within two weeks.",
+    "language": "sv",
+    "copyGlobs": ["src/copy/**"],
+    "clientDocs": ["docs/requirements.md"]
+  },
+  "lanes": [
+    { "id": "publik", "label": "Publik", "asBuiltPrefix": "P", "targetPrefix": "TP", "actors": ["visitor"] },
+    { "id": "konto", "label": "Konto", "asBuiltPrefix": "K", "targetPrefix": "TK", "actors": ["account holder"] }
+  ],
+  "inputs": [
+    "inputs/routes.md",
+    "inputs/entry-points.md",
+    "inputs/functionality-map.md",
+    "inputs/usage.md",
+    "inputs/prior-research.md"
+  ],
+  "screens": {
+    "baseUrl": "http://127.0.0.1:3100",
+    "viewports": [
+      { "name": "desktop", "width": 1440, "height": 900 },
+      { "name": "phone", "width": 390, "height": 844 }
+    ],
+    "auth": {
+      "mode": "devLogin",
+      "endpoint": "/api/dev/login",
+      "header": "x-dev-login-secret",
+      "secretFile": ".env.local",
+      "secretEnv": "DEV_LOGIN_SECRET",
+      "handleField": "handle"
+    },
+    "identities": [
+      { "id": "visitor", "role": null },
+      { "id": "holder", "role": "holder@example.test" }
+    ]
+  },
+  "engines": {
+    "cheap": {
+      "engine": "claude",
+      "model": "sonnet",
+      "effort": "high",
+      "maxTurns": 120,
+      "concurrency": 6,
+      "wrapper": null,
+      "timeoutMs": 1800000
+    }
+  },
+  "models": {
+    "foundation": "opus",
+    "builder": "sonnet",
+    "checker": "sonnet",
+    "fixer": "sonnet",
+    "critic": "inherit",
+    "blockerFixer": "sonnet",
+    "finalChecker": "sonnet"
+  },
+  "commands": {
+    "lint": "npm run lint",
+    "types": "npm run typecheck",
+    "extra": ["npm run check:ui"],
+    "full": "npm run check",
+    "e2e": "npm run test:e2e -- {spec} --port={port}",
+    "usage": null
+  },
+  "loop": {
+    "maxRounds": 3,
+    "playwrightSlots": 1,
+    "mode": "real",
+    "specTemplate": "tests/e2e/{id}.spec.ts",
+    "ownsBase": null,
+    "portBase": 3200
+  },
+  "rules": {
+    "file": "REDESIGN-RULES.md",
+    "cutMarker": "## Ranked redesign moves"
+  },
+  "build": {
+    "designSkill": "/abs/path/to/frontend-design/SKILL.md",
+    "houseDocs": ["src/ui/README.md", "docs/design-system.md"],
+    "foundation": {
+      "id": "F0",
+      "brief": "Build the shell every job links into: page frame, navigation, the empty and error states, and the one primary-action rule. No feature route.",
+      "owns": ["src/ui/templates/**", "src/app/layout.tsx"],
+      "spec": "tests/e2e/shell.spec.ts"
+    }
+  }
+}

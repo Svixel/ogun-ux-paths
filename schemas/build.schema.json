@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ux-paths.local/schemas/build.schema.json",
+  "description": "Report returned by a build-loop builder or fixer: what it built, what it ran, where it deviated, what wall it hit, and what it still wants from the foundation.",
+  "type": "object",
+  "properties": {
+    "routes": {
+      "type": "array",
+      "description": "Routes built or touched this round.",
+      "items": { "type": "string" }
+    },
+    "files": {
+      "type": "array",
+      "description": "Files created or edited this round.",
+      "items": { "type": "string" }
+    },
+    "checksRun": {
+      "type": "string",
+      "description": "The exact commands run and their results, as text."
+    },
+    "deviations": {
+      "type": "string",
+      "description": "Where the build differs from the target path or contract, and why."
+    },
+    "walls": {
+      "type": "string",
+      "description": "A real wall hit and named plainly, or an empty string if none."
+    },
+    "wantedFromFoundation": {
+      "type": "array",
+      "description": "Things this job needed from the shared foundation that were missing or insufficient, for the orchestrator to act on between rounds.",
+      "items": { "type": "string" }
+    }
+  },
+  "required": ["routes", "files", "checksRun", "deviations", "walls", "wantedFromFoundation"],
+  "additionalProperties": false
+}
