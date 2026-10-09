@@ -64,4 +64,4 @@ Your project configs in `projects/` and any real-output fixtures are git-ignored
 
 ## Status and licence
 
-Personal tooling, shared as is, maintained by [@Svixel](https://github.com/Svixel). No licence is set yet, so ask before reusing it commercially.
+Shared as is, maintained by [@Svixel](https://github.com/Svixel). Released under the [MIT licence](LICENSE).
