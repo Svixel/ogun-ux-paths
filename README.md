@@ -13,7 +13,7 @@ Read `SKILL.md` first, then `PLAN.md` and `reference/METHOD.md`.
 Clone into your agent's skills folder, for example:
 
 ```
-git clone https://github.com/Svixel/ux-paths ~/.claude/skills/ux-paths
+git clone https://github.com/Svixel/ogun-ux-paths ~/.claude/skills/ux-paths
 ```
 
 Copy `projects/example.json` to `projects/<your-product>.json` and fill it in (`projects/README.md` explains every key). Then run `node scripts/ux-paths init --project <your-product>`.
